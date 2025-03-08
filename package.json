@@ -1,0 +1,41 @@
+{
+  "name": "onearena",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "deploy": "tsx scripts/deploy.ts",
+    "test:battle": "tsx scripts/test-battle.ts",
+    "test:battle:onchain": "tsx scripts/test-battle.ts onchain"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "next": "^15.0.0",
+    "@onelabs/dapp-kit": "^0.15.2",
+    "@onelabs/sui": "latest",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.456.0",
+    "@tanstack/react-query": "^5.28.0",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-tabs": "^1.0.4",
+    "@radix-ui/react-progress": "^1.0.3",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.0",
+    "sonner": "^1.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.4",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsx": "^4.7.0"
+  }
+}
