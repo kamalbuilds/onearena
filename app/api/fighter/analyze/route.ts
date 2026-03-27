@@ -1,37 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeFighter, analyzeFighterWithAI, getEvolutionAdvice } from '@/lib/ai-engine';
-import type { Fighter } from '@/lib/ai-engine';
-
-interface AnalyzeRequest {
-  fighter: Fighter;
-  useAI?: boolean;
-  evolutionPoints?: number; // If provided, also returns evolution advice
-}
+import { validateFighter } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as AnalyzeRequest;
-    const { fighter, useAI, evolutionPoints } = body;
+    const body = await request.json();
+    const { fighter, useAI, evolutionPoints } = body as { fighter: unknown; useAI?: boolean; evolutionPoints?: number };
 
-    if (!fighter) {
-      return NextResponse.json({ error: 'Missing fighter data' }, { status: 400 });
-    }
+    const v = validateFighter(fighter, 'fighter');
+    if (!v.valid) return NextResponse.json({ error: 'Invalid fighter', details: v.errors }, { status: 400 });
 
+    const f = v.fighter;
     const useAIAnalysis = !!(useAI && process.env.OPENAI_API_KEY);
 
     const analysis = useAIAnalysis
-      ? await analyzeFighterWithAI(fighter)
-      : analyzeFighter(fighter);
+      ? await analyzeFighterWithAI(f)
+      : analyzeFighter(f);
 
-    const evolution = typeof evolutionPoints === 'number' && evolutionPoints > 0
-      ? getEvolutionAdvice(fighter, evolutionPoints)
+    const evolution = typeof evolutionPoints === 'number' && evolutionPoints > 0 && evolutionPoints <= 100
+      ? getEvolutionAdvice(f, Math.round(evolutionPoints))
       : null;
 
-    return NextResponse.json({
-      analysis,
-      evolution,
-      isAI: useAIAnalysis,
-    });
+    return NextResponse.json({ analysis, evolution, isAI: useAIAnalysis });
   } catch (error) {
     console.error('Fighter analysis error:', error);
     return NextResponse.json({ error: 'Failed to analyze fighter' }, { status: 500 });

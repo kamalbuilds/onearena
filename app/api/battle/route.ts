@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { simulateBattle, simulateBattleWithAI } from '@/lib/ai-engine';
-import type { Fighter } from '@/lib/ai-engine';
-
-interface BattleRequest {
-  fighter1: Fighter;
-  fighter2: Fighter;
-  useAI?: boolean;
-}
+import { validateFighter } from '@/lib/validation';
+import { recordBattle } from '@/lib/battle-store';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as BattleRequest;
-    const { fighter1, fighter2, useAI } = body;
+    const body = await request.json();
+    const { fighter1, fighter2, useAI } = body as { fighter1: unknown; fighter2: unknown; useAI?: boolean };
 
-    if (!fighter1 || !fighter2) {
-      return NextResponse.json({ error: 'Missing fighter data' }, { status: 400 });
-    }
+    const v1 = validateFighter(fighter1, 'fighter1');
+    if (!v1.valid) return NextResponse.json({ error: 'Invalid fighter1', details: v1.errors }, { status: 400 });
+    const v2 = validateFighter(fighter2, 'fighter2');
+    if (!v2.valid) return NextResponse.json({ error: 'Invalid fighter2', details: v2.errors }, { status: 400 });
 
+    const f1 = v1.fighter;
+    const f2 = v2.fighter;
     const useAINarration = !!(useAI && process.env.OPENAI_API_KEY);
 
     const result = useAINarration
-      ? await simulateBattleWithAI(fighter1, fighter2)
-      : simulateBattle(fighter1, fighter2);
+      ? await simulateBattleWithAI(f1, f2)
+      : simulateBattle(f1, f2);
+
+    recordBattle(f1, f2, result);
 
     return NextResponse.json({ ...result, aiNarration: useAINarration });
   } catch (error) {
